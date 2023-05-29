@@ -10,7 +10,7 @@ import CloudKit
 
 private let database = CKContainer.default().publicCloudDatabase
 
-public func getPersonalID() async -> CKRecord.ID? {
+public func personalCKRecordID() async -> CKRecord.ID? {
     if let id = try? await CKContainer.default().userRecordID() {
         return id
     } else {
@@ -19,7 +19,7 @@ public func getPersonalID() async -> CKRecord.ID? {
 }
 
 public func updateUserRecord(custom: (CKRecord) -> () ) async {
-    guard let personalID = await getPersonalID() else {
+    guard let personalID = await personalCKRecordID() else {
         print("No user id")
         return
     }
@@ -30,7 +30,7 @@ public func updateUserRecord(custom: (CKRecord) -> () ) async {
     operation.modifyRecordsResultBlock = { results in
         switch results {
         case .success:
-            print("Modify records result block")
+            print("Successfully updated user record.")
         case .failure(let error):
             print("Error updating user info: \(error)")
         }
@@ -45,7 +45,7 @@ public func createNewRecord(recordType: CKRecord.RecordType, custom: (CKRecord) 
         if let error {
             print(error)
         } else {
-            print("Uploaded record of type \"\(recordType)\" successfully!")
+            print("Successfully created record of type \"\(recordType)\"!")
         }
     }
 }
@@ -57,7 +57,7 @@ public func updateExistingRecord(record: CKRecord, custom: () -> () ) {
     operation.modifyRecordsResultBlock = { result in
         switch result {
         case .success:
-            print("Updating existing record!")
+            print("Updating existing recordo f type \"\(record.recordType)\"!!")
         case .failure(let error):
             print("Error updating existing record: \(error)")
         }
@@ -74,6 +74,7 @@ public func fetchAllRecords(_ recordType: CKRecord.RecordType, custom: @escaping
         let results = matchedResults.compactMap { $0.1 }
         let records = results.compactMap { try? $0.get() }
         custom(records)
+        print("Sucessfully fetched records of type \"\(recordType)\"")
     } catch {
         print("Error fetching records of type: \"\(recordType)\"")
     }
