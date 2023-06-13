@@ -66,7 +66,22 @@ public func updateExistingRecord(record: CKRecord, custom: () -> () ) {
 }
 
 public func fetchAllRecords(_ recordType: CKRecord.RecordType, custom: @escaping ([CKRecord]) -> () ) async {
-    let predicate = NSPredicate(value: true)
+    let predicate: NSPredicate = NSPredicate(value: true)
+    let query = CKQuery(recordType: recordType, predicate: predicate)
+    do {
+        let CKReturn = try await database.records(matching: query)
+        let matchedResults = CKReturn.matchResults
+        let results = matchedResults.compactMap { $0.1 }
+        let records = results.compactMap { try? $0.get() }
+        custom(records)
+        print("Sucessfully fetched records of type \"\(recordType)\"")
+    } catch {
+        print("Error fetching records of type: \"\(recordType)\"")
+    }
+}
+
+public func fetchAllPredicatedRecords(_ recordType: CKRecord.RecordType, predicate: (format: String, argument: Any), custom: @escaping ([CKRecord]) -> () ) async {
+    let predicate: NSPredicate = NSPredicate(format: predicate.format, predicate.argument)
     let query = CKQuery(recordType: recordType, predicate: predicate)
     do {
         let CKReturn = try await database.records(matching: query)
