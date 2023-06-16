@@ -18,7 +18,7 @@ public func personalCKRecordID() async -> CKRecord.ID? {
     }
 }
 
-public func updateUserRecord(custom: (CKRecord) -> () ) async {
+public func CKHelperUpdateUserRecord(custom: (CKRecord) -> () ) async {
     guard let personalID = await personalCKRecordID() else {
         print("No user id")
         return
@@ -38,7 +38,7 @@ public func updateUserRecord(custom: (CKRecord) -> () ) async {
     database.add(operation)
 }
 
-public func createNewRecord(recordType: CKRecord.RecordType, custom: (CKRecord) -> () ) {
+public func CKHelperCreateNewRecord(recordType: CKRecord.RecordType, custom: (CKRecord) -> () ) {
     let record = CKRecord(recordType: recordType)
     custom(record)
     database.save(record) { savedRecord, error in
@@ -50,7 +50,7 @@ public func createNewRecord(recordType: CKRecord.RecordType, custom: (CKRecord) 
     }
 }
 
-public func updateExistingRecord(record: CKRecord, custom: () -> () ) {
+public func CKHelperUpdateExistingRecord(record: CKRecord, custom: () -> () ) {
     custom()
     let operation = CKModifyRecordsOperation(recordsToSave: [record])
     operation.savePolicy = .changedKeys
@@ -65,25 +65,10 @@ public func updateExistingRecord(record: CKRecord, custom: () -> () ) {
     database.add(operation)
 }
 
-public func fetchAllRecords(_ recordType: CKRecord.RecordType, custom: @escaping ([CKRecord]) -> () ) async {
-    let predicate: NSPredicate = NSPredicate(value: true)
+public func CKHelperFetchMatchingRecords(_ recordType: CKRecord.RecordType, predicate: NSPredicate = NSPredicate(value: true), resultsLimit: Int = CKQueryOperation.maximumResults, custom: @escaping ([CKRecord]) -> () ) async {
     let query = CKQuery(recordType: recordType, predicate: predicate)
     do {
-        let CKReturn = try await database.records(matching: query)
-        let matchedResults = CKReturn.matchResults
-        let results = matchedResults.compactMap { $0.1 }
-        let records = results.compactMap { try? $0.get() }
-        custom(records)
-        print("Sucessfully fetched records of type \"\(recordType)\"")
-    } catch {
-        print("Error fetching records of type: \"\(recordType)\"")
-    }
-}
-
-public func fetchAllPredicatedRecords(_ recordType: CKRecord.RecordType, predicate: NSPredicate, custom: @escaping ([CKRecord]) -> () ) async {
-    let query = CKQuery(recordType: recordType, predicate: predicate)
-    do {
-        let CKReturn = try await database.records(matching: query)
+        let CKReturn = try await database.records(matching: query, resultsLimit: resultsLimit)
         let matchedResults = CKReturn.matchResults
         let results = matchedResults.compactMap { $0.1 }
         let records = results.compactMap { try? $0.get() }
