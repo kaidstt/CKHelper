@@ -80,8 +80,7 @@ public func fetchAllRecords(_ recordType: CKRecord.RecordType, custom: @escaping
     }
 }
 
-public func fetchAllPredicatedRecords(_ recordType: CKRecord.RecordType, predicate: (format: String, argument: CVarArg), custom: @escaping ([CKRecord]) -> () ) async {
-    let predicate: NSPredicate = NSPredicate(format: predicate.format, predicate.argument)
+public func fetchAllPredicatedRecords(_ recordType: CKRecord.RecordType, predicate: NSPredicate, custom: @escaping ([CKRecord]) -> () ) async {
     let query = CKQuery(recordType: recordType, predicate: predicate)
     do {
         let CKReturn = try await database.records(matching: query)
